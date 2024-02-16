@@ -12,8 +12,12 @@ step 2 : in the terminal enter the command 'pip install django'
 
 
 
-step 3 : enter 'python manage.py runserver'
+step 3 : enter 'venv/scripts/activate'
 
 
 
-step 4 : a link for the localhost will be generated. click on it to run the web app
+step 4 : enter 'python manage.py runserver'
+
+
+
+step 5 : a link for the localhost will be generated. click on it to run the web app
