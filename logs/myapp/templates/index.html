@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log viewer</title>
+    <style>
+        body {
+            background: black;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        #sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        #sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+        #sidebar div {
+            color: white;
+            font-size: 30px;
+            margin-left: 20px;
+            cursor: pointer;
+        }
+
+        .sub-elements {
+            display: none;
+            padding-left: 20px;
+        }
+
+        .sub-elements a {
+            color: black;
+            text-decoration: none;
+            font-size: 18px;
+            display: block;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .sub-elements a:hover {
+            color: black;
+        }
+
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+        }
+
+        .toggle-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .hover-text {
+            display: none;
+            margin-left: 5px;
+            font-size: 18px;
+        }
+
+        #log-content {
+            padding: 20px;
+        }
+
+        #search-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #search-input {
+            padding: 10px;
+            width: 70%;
+            max-width: 300px;
+        }
+
+        #search-button {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div onclick="toggleSubElements(this)">Apache
+            <span class="hover-text">(Click)</span>
+            <div class="sub-elements">
+                <a onclick="fetchLogs('Apache', 'Access')">Access Logs</a>
+                <a onclick="fetchLogs('Apache', 'Error')">Error Logs</a>
+                <a onclick="fetchLogs('Apache', 'Attack')">Attack Logs</a>
+            </div>
+        </div><br>
+        <div onclick="toggleSubElements(this)">MySQL
+            <span class="hover-text">(Click)</span>
+            <div class="sub-elements">
+                <a onclick="fetchLogs('MySQL', 'Startup')">Startup Logs</a>
+                <a onclick="fetchLogs('MySQL', 'Shutdown')">Shutdown Logs</a>
+            </div>
+        </div><br>
+        <div onclick="toggleSubElements(this)">Nginx
+            <span class="hover-text">(Click)</span>
+            <div class="sub-elements">
+                <a onclick="fetchLogs('Nginx', 'Access')">Access Logs</a>
+                <a onclick="fetchLogs('Nginx', 'Error')">Error Logs</a>
+            </div>
+        </div><br>
+    </div>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Enter your search term">
+        <button id="search-button" onclick="performSearch()">Search</button>
+    </div>
+    <div id="main">
+        <span class="toggle-btn" onclick="toggleNav()">&#9776; Log Viewer</span>
+        <div id="log-content"></div>
+    </div>
+
+    <script>
+        function toggleNav() {
+            var sidebar = document.getElementById("sidebar");
+            var main = document.getElementById("main");
+
+            if (sidebar.style.width === "250px") {
+                sidebar.style.width = "0";
+                main.style.marginLeft = "0";
+            } else {
+                sidebar.style.width = "250px";
+                main.style.marginLeft = "250px";
+            }
+        }
+
+        function toggleSubElements(divElement) {
+            var subElements = divElement.querySelector('.sub-elements');
+            subElements.style.display = (subElements.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function showHoverText(divElement) {
+            var hoverText = divElement.querySelector('.hover-text');
+            hoverText.style.display = 'inline';
+        }
+
+        function hideHoverText(divElement) {
+            var hoverText = divElement.querySelector('.hover-text');
+            hoverText.style.display = 'none';
+        }
+
+        function fetchLogs(service, logType) {
+            var logContent = document.getElementById('log-content');
+            logContent.innerHTML = 'Fetching ' + logType + ' logs for ' + service + '...';
+
+            // Simulate AJAX call to the JSONPlaceholder API
+            var apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
+            // Perform AJAX call
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update log content with fetched data
+                    logContent.innerHTML = '<h3>' + logType + ' logs for ' + service + '</h3>';
+
+                    // Apply different styles based on log type
+                    var color = '';
+                    switch (logType) {
+                        case 'Access':
+                        case 'Startup':
+                        case 'Shutdown':
+                            color = 'blue';
+                            break;
+                        case 'Error':
+                            color = 'red';
+                            break;
+                        case 'Attack':
+                            color = 'yellow';
+                            break;
+                        default:
+                            color = 'black';
+                    }
+
+                    // Loop through each log and append to the content with the specified color
+                    data.forEach(log => {
+                        logContent.innerHTML += '<p style="color:' + color + '">' + JSON.stringify(log) + '</p>';
+                    });
+                })
+                .catch(error => {
+                    logContent.innerHTML = '<p>Error fetching logs: ' + error + '</p>';
+                });
+        }
+
+        function performSearch() {
+            var searchTerm = document.getElementById('search-input').value.toLowerCase();
+            var logContent = document.getElementById('log-content');
+
+            // Reset log content
+            logContent.innerHTML = '';
+
+            // Simulate AJAX call to the JSONPlaceholder API
+            var apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
+            // Perform AJAX call
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Filter data based on search term
+                    var filteredData = data.filter(log => JSON.stringify(log).toLowerCase().includes(searchTerm));
+
+                    // Display filtered data
+                    filteredData.forEach(log => {
+                        logContent.innerHTML += '<p>' + JSON.stringify(log) + '</p>';
+                    });
+                })
+                .catch(error => {
+                    logContent.innerHTML = '<p>Error fetching logs: ' + error + '</p>';
+                });
+        }
+    </script>
+
+</body>
+</html>
